@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AISAP · RHTP Hospital Scout</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:#0B1F3A;--navy2:#152d52;--blue:#1B6CA8;
+    --teal:#0D9488;--teal-light:#CCFBF1;
+    --amber:#D97706;--amber-light:#FEF3C7;
+    --red:#DC2626;--red-light:#FEE2E2;
+    --green:#059669;--green-light:#D1FAE5;
+    --gray:#64748B;--gray-light:#F1F5F9;
+    --border:#E2E8F0;--text:#1E293B;--text2:#475569;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:#F8FAFC;color:var(--text);min-height:100vh;}
+  header{background:var(--navy);padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;}
+  .logo{font-family:'DM Serif Display',serif;color:white;font-size:20px;}
+  .logo span{color:#5EEAD4;}
+  .badge{font-family:'DM Mono',monospace;font-size:11px;color:#94A3B8;background:rgba(255,255,255,0.07);padding:4px 10px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);}
+  main{max-width:960px;margin:0 auto;padding:40px 24px 80px;}
+  .page-title{font-family:'DM Serif Display',serif;font-size:32px;color:var(--navy);margin-bottom:6px;}
+  .page-sub{color:var(--text2);font-size:15px;margin-bottom:32px;}
+  .card{background:white;border:1px solid var(--border);border-radius:16px;padding:28px 32px;margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,0.04);}
+  .card-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--gray);margin-bottom:20px;}
+  label{display:block;font-size:13px;font-weight:500;color:var(--text);margin-bottom:7px;}
+  select{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:white;outline:none;appearance:none;transition:border-color 0.15s;}
+  select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(27,108,168,0.1);}
+  .run-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--navy);color:white;border:none;border-radius:10px;padding:13px 24px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:background 0.15s;width:100%;margin-top:16px;}
+  .run-btn:hover{background:var(--navy2);}
+  .run-btn:disabled{background:#94A3B8;cursor:not-allowed;}
+  .status-bar{display:none;background:white;border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:20px;}
+  .status-bar.visible{display:block;}
+  .status-step{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text2);margin-bottom:8px;}
+  .status-step:last-child{margin-bottom:0;}
+  .step-icon{width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+  .spinner-sm{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin 0.7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .step-done{color:var(--green);font-size:16px;}
+  .step-pending{color:var(--gray);}
+  .error-banner{background:var(--red-light);border:1px solid #FECACA;border-radius:10px;padding:14px 18px;font-size:13px;color:var(--red);margin-bottom:20px;display:none;}
+  .error-banner.visible{display:block;}
+  .success-banner{background:var(--green-light);border:1px solid #6EE7B7;border-radius:12px;padding:16px 20px;margin-bottom:20px;display:none;align-items:center;gap:12px;font-size:14px;color:#065F46;}
+  .success-banner.visible{display:flex;}
+  .success-banner a{color:#065F46;font-weight:600;}
+  .results{display:none;}
+  .results.visible{display:block;}
+  .section-title{font-family:'DM Serif Display',serif;font-size:22px;color:var(--navy);margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+  .count-badge{background:var(--navy);color:white;font-family:'DM Mono',monospace;font-size:12px;padding:3px 10px;border-radius:20px;}
+  .table-wrap{background:white;border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:28px;overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;min-width:600px;}
+  thead tr{background:var(--navy);}
+  thead th{text-align:left;padding:12px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:#94A3B8;font-family:'DM Mono',monospace;white-space:nowrap;}
+  tbody tr{border-bottom:1px solid var(--border);transition:background 0.1s;}
+  tbody tr:last-child{border-bottom:none;}
+  tbody tr:hover{background:#F8FAFC;}
+  td{padding:12px 14px;font-size:13px;vertical-align:top;line-height:1.5;}
+  .tag{font-size:11px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:5px;font-weight:500;display:inline-block;margin:1px;}
+  .tag-teal{background:var(--teal-light);color:#0F766E;}
+  .tag-amber{background:var(--amber-light);color:#92400E;}
+  .tag-green{background:var(--green-light);color:#065F46;}
+  .tag-red{background:var(--red-light);color:#991B1B;}
+  .score-wrap{display:flex;align-items:center;gap:6px;}
+  .score-track{width:50px;height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
+  .score-fill{height:100%;border-radius:3px;background:var(--teal);}
+  .score-num{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;}
+  .empty{text-align:center;padding:40px;color:var(--gray);font-size:14px;}
+  @media(max-width:600px){main{padding:24px 16px 60px;}header{padding:0 20px;}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">AISAP <span>·</span> RHTP Scout</div>
+  <div class="badge">Outreach Tool v2</div>
+</header>
+
+<main>
+  <h1 class="page-title">Hospital Scout</h1>
+  <p class="page-sub">Select a state → agent searches opportunities & hospitals → saves to Google Sheets</p>
+
+  <div class="card">
+    <div class="card-label">Search Settings</div>
+    <div>
+      <label for="stateSelect">State</label>
+      <select id="stateSelect">
+        <option value="">— Select a state —</option>
+        <option>Alabama</option><option>Alaska</option><option>Arizona</option><option>Arkansas</option>
+        <option>California</option><option>Colorado</option><option>Connecticut</option><option>Delaware</option>
+        <option>Florida</option><option>Georgia</option><option>Hawaii</option><option>Idaho</option>
+        <option>Illinois</option><option>Indiana</option><option>Iowa</option><option>Kansas</option>
+        <option>Kentucky</option><option>Louisiana</option><option>Maine</option><option>Maryland</option>
+        <option>Massachusetts</option><option>Michigan</option><option>Minnesota</option><option>Mississippi</option>
+        <option>Missouri</option><option>Montana</option><option>Nebraska</option><option>Nevada</option>
+        <option>New Hampshire</option><option>New Jersey</option><option>New Mexico</option><option>New York</option>
+        <option>North Carolina</option><option>North Dakota</option><option>Ohio</option><option>Oklahoma</option>
+        <option>Oregon</option><option>Pennsylvania</option><option>Rhode Island</option><option>South Carolina</option>
+        <option>South Dakota</option><option>Tennessee</option><option>Texas</option><option>Utah</option>
+        <option>Vermont</option><option>Virginia</option><option>Washington</option><option>West Virginia</option>
+        <option>Wisconsin</option><option>Wyoming</option>
+      </select>
+    </div>
+    <button class="run-btn" onclick="runScout()" id="runBtn">
+      <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/></svg>
+      Run Scout
+    </button>
+  </div>
+
+  <div class="status-bar" id="statusBar">
+    <div class="status-step" id="step1"><div class="step-icon">○</div><span>Searching RHTP opportunities...</span></div>
+    <div class="status-step step-pending" id="step2"><div class="step-icon">○</div><span>Finding matching hospitals...</span></div>
+    <div class="status-step step-pending" id="step3"><div class="step-icon">○</div><span>Saving to Google Sheets...</span></div>
+  </div>
+
+  <div class="error-banner" id="errorBanner"></div>
+
+  <div class="success-banner" id="successBanner">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+    <span>Saved successfully! <a id="sheetLink" href="#" target="_blank">Open Google Sheet →</a></span>
+  </div>
+
+  <div class="results" id="results">
+    <div class="section-title">Opportunities <span class="count-badge" id="oppCount">0</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Program Name</th><th>Type</th><th>Amount</th>
+          <th>Deadline</th><th>Days Left</th><th>Tech Eligible</th><th>AISAP Fit</th>
+        </tr></thead>
+        <tbody id="oppBody"></tbody>
+      </table>
+    </div>
+
+    <div class="section-title">Recommended Hospitals <span class="count-badge" id="hospCount">0</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Hospital</th><th>City</th><th>Type</th><th>Beds</th>
+          <th>Cardiology</th><th>Fin. Stressed</th><th>Score</th><th>Why Relevant</th>
+        </tr></thead>
+        <tbody id="hospBody"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<script>
+const ANTHROPIC_KEY = "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";
+const FOLDER_ID = "1LHV1x7IXt_Ah3z6e1nHGGcGQ76tja0QN";
+const SERVICE_ACCOUNT = {
+  client_email:"contracts-bot@aisap-contracts.iam.gserviceaccount.com",
+  token_uri:"https://oauth2.googleapis.com/token",
+  private_key:"-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDHsO3A+2VTX8vF\naOpy3OGBvPWwnMrz1KcO2Chk5EzYqdlEk35haUMteNYAJMIi+Tsuzxe8TMJjLX9j\nvVzsLRnZ/9DjuJxVS3HGW+hHMSHrM0Expz7QyMMMdYbgPgWOw3YTPDKJ3Y2v2c3l\nE+rt+l8JlRwX9WviLNRWl92+jojh9AHSkO3qtuWBBTHe9PkABnmOf0jPBfroMl0+\n3CD5CdcIWaKWJ5cvwkyNrWG7BmfXypMQa+URrAMxVujrPKj0YvUndHu7bHX3/4f5\nyg+E4gSQ8VL9qBE1S+RDXPLeaC90kw+qinx94+JiX8Z1rESnBdUVl/pnOAQTu/f/\nvcCHsn6bAgMBAAECggEAGPT6gefpc1DBqDEYkV/G/0Pydi7iXomb52BfNrIhuI0M\nY7mwoylYr/zYzLkgr5Dz3exxTE37mBGTnjozEYFW0xwEVgbjOEsZiRpAyW+mjD1M\n+eZWahmX5vK5TJqebzKWizOMIsGBzRHXiGMY4BfZJjAbNr4BdwmgmsHtgLynoYrN\n09y4GrAHDqQlChsYboB6lDzqdgGhOKAq/BhbjreYFEMKFU+p4DseuYV2tSEGH0SA\n1RCc7Wwis0eXrtHnwPR96vzVTvPv8VCb+5J/gnYPHSZt4l4ktsSPg9pmHee/wbLB\nYnEkL93Q6H0ZRdw1Xm1qgphu8hIgkjVya3dByiKfYQKBgQD+1I+A1OauQzU0vDMg\nd8MGjd2Bz/6V5Koj+gyeYG3qlCacvCK27K2LXH16GS6A0D3S+c1AXz1HyG4tO/39\nJIXZjKg0JR2bG1J4CmMlM2xcoMDQ2FN2LojyGok1FTdYVVptblNTQodbJxD33zbb\nC6X2gplZxKXgLGdt0hCD754+HwKBgQDIm5OeHJocXKz+O3chHoJs+qWRkBdhMVRa\nOWmhIUhn79SPJ5oiUVgMWdrCQOCtYtDiINOBoLAn0hrGEbYRh+LPhnVsRDbNXMNR\nJgACtXfwxDeqK0n3Q1CbIeQkCwSn/Fhq5aoDpxD94yW+yMuos5VD9yCVuL/Qq9c/\n7fKAGmu4BQKBgQD6Z8cHsq1nCdWrl0+qFOUIeLj0SX2Cr2rc5WYm7tyziJcUpu55\nz8KM0fre0wXWQEqwGRWurqeZ9QMG4g+oA46fgs76Rop8EvIL0TExqgFOWAyAbEI/\nPGUHejnfdpSm8WBlbeblRteZI59R4v6VajHQNO8Zvdm9mgScbrIZ44kcwwKBgFGU\n02eNgi7ekYuia0QQwEHJfOPBkYB5KzC2AHsCqgt6wRqmpEwogIIlWI1/DN/2O7R6\nXQlua7UGANVkBoMCm/6BU+d/pjnF67hol8CCRBCp+2k8yYvA2Fr+YWU3BeG7AcoX\nNBjgLEzTv1njFs+4mI9XRO0egQM/nv3kqqXmGMBxAoGAd2W3YUfKklsJpHgyi66r\nht0IbhK/iV9cErUF7h0+3XYVhR8VL8wOKGMN5U9UpxkReMwJ3/NwTDLE2Gu9yR1j\nDwd/IrK7RJNbFm11Yr2xNOYpS1D4LOQ3noB9Q6YABV12GR2M3+h2ee2VNil3f2M4\nfqwWRVs1k//9d5fT6sjUDyg=\n-----END PRIVATE KEY-----\n"
+};
+
+const SYSTEM_PROMPT = `You are an intelligent research agent for AISAP, an AI-powered cardiac diagnostics platform (FDA-cleared AI-POCUS).
+
+AISAP ICP — target hospitals:
+- Independent or network-affiliated rural/community hospitals
+- 100+ staffed beds
+- Active cardiology dept OR high cardiac burden
+- NOT: pediatric-only, psychiatric, OB/maternity, long-term care, dental
+
+When given "Scout [State]", search the web and return ONLY a valid JSON object (no markdown, no explanation, no backticks):
+
+{
+  "opportunities": [
+    {
+      "program_name": "string",
+      "type": "RFA|RFP|IFB|Grant|Other",
+      "amount": "string",
+      "deadline": "MM/DD/YYYY or Unknown",
+      "days_left": number or null,
+      "technology_eligible": "Yes|No|Verify manually",
+      "aisap_fit": "one sentence max",
+      "source_url": "string"
+    }
+  ],
+  "hospitals": [
+    {
+      "name": "string",
+      "city": "string",
+      "type": "Rural Hospital|CAH",
+      "beds": number or null,
+      "independent_or_idn": "Independent|IDN|Unknown",
+      "cardiology_dept": "Yes|No|Unknown",
+      "financially_stressed": "Yes|No|Unknown",
+      "score": number 1-10,
+      "why_relevant": "one sentence max"
+    }
+  ]
+}
+
+Search these sources for opportunities:
+- https://rhtp.amemobile.net/opportunities
+- https://rhtp.amemobile.net/activity/summaries
+- https://www.ruralhealthinfo.org/rss/news/topics/infrastructure.xml
+- Google News for "Rural Health Transformation Program [state]"
+
+INCLUDE opportunities: technology/equipment/AI/diagnostics eligible, OPEN or UPCOMING only.
+EXCLUDE: pediatrics-only, OB-only, behavioral health-only, dental, workforce training-only.
+Unknown fit → include, mark technology_eligible as "Verify manually".
+
+For hospitals: search Medicare Care Compare and web for rural hospitals in the state.
+INCLUDE: 100+ staffed beds, rural/community, has cardiology or ED.
+EXCLUDE: academic medical centers, large enterprise systems, pediatric-only, psychiatric-only.
+
+Score hospitals 1-10:
++3 No on-staff cardiologist (all cardiac cases transferred)
++2 Financially stressed / thin margins
++2 High heart disease death rate in county
++2 Long echo wait times
++1 Has existing POCUS equipment
++1 Independent (faster decisions)
+
+Sort hospitals by score descending.
+Return ONLY valid JSON. Nothing else.`;
+
+async function runScout() {
+  const state = document.getElementById('stateSelect').value;
+  if (!state) { alert('Please select a state'); return; }
+
+  setRunning(true);
+  hideError(); hideResults(); hideSuccess();
+  showStatus();
+  setStep(1,'running','Searching RHTP opportunities...');
+  setStep(2,'pending','Finding matching hospitals...');
+  setStep(3,'pending','Saving to Google Sheets...');
+
+  try {
+    const data = await callClaude(state);
+    setStep(1,'done',`Found ${data.opportunities.length} opportunities`);
+    setStep(2,'done',`Found ${data.hospitals.length} hospitals`);
+    renderOpps(data.opportunities);
+    renderHosps(data.hospitals);
+    showResults();
+
+    setStep(3,'running','Saving to Google Sheets...');
+    const url = await saveToSheets(state, data);
+    setStep(3,'done','Saved successfully!');
+    showSuccess(url);
+  } catch(e) {
+    showError(e.message);
+    console.error(e);
+  } finally {
+    setRunning(false);
+  }
+}
+
+async function callClaude(state) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'x-api-key': ANTHROPIC_KEY,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
+    body: JSON.stringify({
+      model:'claude-opus-4-6',
+      max_tokens:4000,
+      system: SYSTEM_PROMPT,
+      tools:[{type:'web_search_20250305',name:'web_search'}],
+      messages:[{role:'user',content:`Scout ${state}`}]
+    })
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error?.message || `Claude API error: ${res.status}`);
+  }
+
+  const json = await res.json();
+  const text = json.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error('Agent returned invalid response — please try again');
+  try { return JSON.parse(match[0]); }
+  catch(e) { throw new Error('Could not parse agent response — please try again'); }
+}
+
+async function getAccessToken() {
+  const now = Math.floor(Date.now()/1000);
+  const b64url = s => btoa(s).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+  const header = b64url(JSON.stringify({alg:'RS256',typ:'JWT'}));
+  const payload = b64url(JSON.stringify({
+    iss: SERVICE_ACCOUNT.client_email,
+    scope:'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive',
+    aud: SERVICE_ACCOUNT.token_uri,
+    exp: now+3600, iat: now
+  }));
+  const unsigned = `${header}.${payload}`;
+  const pem = SERVICE_ACCOUNT.private_key.replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\n/g,'');
+  const der = Uint8Array.from(atob(pem),c=>c.charCodeAt(0));
+  const key = await crypto.subtle.importKey('pkcs8',der,{name:'RSASSA-PKCS1-v1_5',hash:'SHA-256'},false,['sign']);
+  const sig = await crypto.subtle.sign('RSASSA-PKCS1-v1_5',key,new TextEncoder().encode(unsigned));
+  const sigB64 = btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+  const jwt = `${unsigned}.${sigB64}`;
+  const tokenRes = await fetch(SERVICE_ACCOUNT.token_uri,{
+    method:'POST',
+    headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:`grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`
+  });
+  const td = await tokenRes.json();
+  if (!td.access_token) throw new Error('Could not get Google access token');
+  return td.access_token;
+}
+
+async function saveToSheets(state, data) {
+  const token = await getAccessToken();
+  const today = new Date().toLocaleDateString('en-US');
+  const title = `AISAP Scout — ${state} — ${today}`;
+
+  const createRes = await fetch('https://sheets.googleapis.com/v4/spreadsheets',{
+    method:'POST',
+    headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},
+    body: JSON.stringify({
+      properties:{title},
+      sheets:[
+        {properties:{title:'Opportunities',sheetId:0}},
+        {properties:{title:'Hospitals',sheetId:1}}
+      ]
+    })
+  });
+  const sheet = await createRes.json();
+  if (!sheet.spreadsheetId) throw new Error('Failed to create Google Sheet');
+  const id = sheet.spreadsheetId;
+
+  const oppH = ['Program Name','Type','Amount','Deadline','Days Left','Technology Eligible','AISAP Fit','Source URL'];
+  const oppR = data.opportunities.map(o=>[o.program_name,o.type,o.amount,o.deadline,o.days_left??'',o.technology_eligible,o.aisap_fit,o.source_url]);
+  const hH = ['Hospital Name','City','State','Type','Beds','Independent/IDN','Cardiology Dept','Financially Stressed','AISAP Score','Why Relevant'];
+  const hR = data.hospitals.map(h=>[h.name,h.city,state,h.type,h.beds??'',h.independent_or_idn,h.cardiology_dept,h.financially_stressed,h.score,h.why_relevant]);
+
+  await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${id}/values:batchUpdate`,{
+    method:'POST',
+    headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},
+    body: JSON.stringify({
+      valueInputOption:'RAW',
+      data:[
+        {range:'Opportunities!A1',values:[oppH,...oppR]},
+        {range:'Hospitals!A1',values:[hH,...hR]}
+      ]
+    })
+  });
+
+  await fetch(`https://www.googleapis.com/drive/v3/files/${id}?addParents=${FOLDER_ID}&removeParents=root`,{
+    method:'PATCH',
+    headers:{'Authorization':`Bearer ${token}`}
+  });
+
+  return `https://docs.google.com/spreadsheets/d/${id}`;
+}
+
+function renderOpps(opps) {
+  document.getElementById('oppCount').textContent = opps.length;
+  document.getElementById('oppBody').innerHTML = opps.length ? opps.map(o=>`
+    <tr>
+      <td><strong>${o.program_name||'—'}</strong></td>
+      <td><span class="tag tag-teal">${o.type||'—'}</span></td>
+      <td style="font-family:'DM Mono',monospace;font-weight:500;color:var(--teal)">${o.amount||'—'}</td>
+      <td>${o.deadline||'—'}</td>
+      <td style="font-family:'DM Mono',monospace;${o.days_left&&o.days_left<45?'color:var(--red);font-weight:600':''}">${o.days_left??'—'}</td>
+      <td><span class="tag ${o.technology_eligible==='Yes'?'tag-green':o.technology_eligible==='No'?'tag-red':'tag-amber'}">${o.technology_eligible||'—'}</span></td>
+      <td style="font-size:12px;color:var(--text2)">${o.aisap_fit||'—'}</td>
+    </tr>`).join('') : '<tr><td colspan="7" class="empty">No opportunities found for this state</td></tr>';
+}
+
+function renderHosps(hosps) {
+  document.getElementById('hospCount').textContent = hosps.length;
+  document.getElementById('hospBody').innerHTML = hosps.length ? hosps.map(h=>`
+    <tr>
+      <td><strong>${h.name||'—'}</strong></td>
+      <td style="color:var(--gray);font-size:12px">${h.city||'—'}</td>
+      <td><span class="tag ${h.type==='CAH'?'tag-teal':'tag-amber'}">${h.type||'—'}</span></td>
+      <td style="font-family:'DM Mono',monospace">${h.beds??'—'}</td>
+      <td><span class="tag ${h.cardiology_dept==='Yes'?'tag-green':h.cardiology_dept==='No'?'tag-red':'tag-amber'}">${h.cardiology_dept||'—'}</span></td>
+      <td><span class="tag ${h.financially_stressed==='Yes'?'tag-amber':'tag-green'}">${h.financially_stressed||'—'}</span></td>
+      <td>
+        <div class="score-wrap">
+          <div class="score-track"><div class="score-fill" style="width:${(h.score||0)*10}%"></div></div>
+          <span class="score-num">${h.score||'—'}/10</span>
+        </div>
+      </td>
+      <td style="font-size:12px;color:var(--text2);max-width:200px">${h.why_relevant||'—'}</td>
+    </tr>`).join('') : '<tr><td colspan="8" class="empty">No hospitals found for this state</td></tr>';
+}
+
+function setRunning(v){
+  const btn=document.getElementById('runBtn');
+  btn.disabled=v;
+  btn.innerHTML=v?'<div class="spinner-sm" style="border-top-color:white"></div> Running...':'<svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/></svg> Run Scout';
+}
+function showStatus(){document.getElementById('statusBar').classList.add('visible');}
+function showResults(){document.getElementById('results').classList.add('visible');}
+function hideResults(){document.getElementById('results').classList.remove('visible');}
+function showError(m){const b=document.getElementById('errorBanner');b.textContent='⚠️ '+m;b.classList.add('visible');}
+function hideError(){document.getElementById('errorBanner').classList.remove('visible');}
+function showSuccess(url){document.getElementById('sheetLink').href=url;document.getElementById('successBanner').classList.add('visible');}
+function hideSuccess(){document.getElementById('successBanner').classList.remove('visible');}
+function setStep(n,status,text){
+  const el=document.getElementById('step'+n);
+  const icon=el.querySelector('.step-icon');
+  el.querySelector('span').textContent=text;
+  if(status==='running'){icon.innerHTML='<div class="spinner-sm"></div>';el.classList.remove('step-pending');}
+  else if(status==='done'){icon.innerHTML='<span class="step-done">✓</span>';el.classList.remove('step-pending');}
+  else{icon.innerHTML='○';el.classList.add('step-pending');}
+}
+</script>
+</body>
+</html>
